@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leke Regex & Entropy PII Scrubber — Documentation & Workbench</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card: rgba(17, 24, 39, 0.7);
+      --border: rgba(55, 65, 81, 0.5);
+      --accent: #a855f7;
+      --accent-glow: rgba(168, 85, 247, 0.25);
+      --success: #34d399;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at 10% 20%, #1a103c 0%, #0b0f19 70%);
+      color: var(--text); min-height: 100vh; padding: 2.5rem 1rem;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .container { max-width: 960px; width: 100%; }
+    .badge {
+      display: inline-block; background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      color: var(--accent); padding: 0.35rem 0.85rem; border-radius: 9999px;
+      font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 1rem;
+    }
+    h1 { font-size: 2.25rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+    p.sub { color: var(--muted); font-size: 1.05rem; margin-bottom: 2rem; line-height: 1.6; }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+    @media(max-width: 768px) { .split { grid-template-columns: 1fr; } }
+    .box {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.5rem; backdrop-filter: blur(10px);
+    }
+    textarea {
+      width: 100%; height: 160px; background: #070a13; border: 1px solid #1f2937;
+      border-radius: 8px; color: #fff; padding: 0.75rem; font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem; margin: 0.5rem 0 1rem;
+    }
+    button {
+      background: linear-gradient(135deg, #9333ea, #c084fc);
+      color: #fff; font-weight: 600; padding: 0.75rem 1.5rem;
+      border: none; border-radius: 8px; cursor: pointer; width: 100%;
+    }
+    .output-box {
+      background: #070a13; border: 1px solid #1f2937; border-radius: 8px;
+      padding: 0.75rem; min-height: 160px; font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem; color: #34d399; margin: 0.5rem 0 1rem; white-space: pre-wrap; word-break: break-all;
+    }
+    .stats { display: flex; gap: 1rem; margin-top: 1rem; font-size: 0.85rem; color: var(--muted); }
+    .stats span { color: var(--accent); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="badge">LLM Data Leakage Prevention</div>
+    <h1>Zero-Dependency PII & Entropy Scrubber</h1>
+    <p class="sub">High-throughput Node.js string sanitation engine combining regex classifiers with Shannon entropy scanning to redact secrets and private credentials in-browser.</p>
+
+    <div class="split">
+      <div class="box">
+        <h3>Raw Untrusted Prompt Input</h3>
+        <textarea id="rawInput">Customer profile:
+Email: robert.langdon@harvard.edu
+Phone: +1 (415) 555-2671
+SSN: 342-88-1294
+Internal Server: 10.0.4.15
+AWS Key: AKIAIOSFODNN7EXAMPLE
+High Entropy Secret: kX9#vL2!mP9$qR8@zW4^</textarea>
+        <button onclick="runScrub()">Run Scrubbing Engine</button>
+      </div>
+
+      <div class="box">
+        <h3>Sanitized LLM-Safe Payload</h3>
+        <div id="cleanOutput" class="output-box">// Click 'Run Scrubbing Engine' to sanitize...</div>
+        <div class="stats">
+          <div>Redacted Count: <span id="redactCount">0</span></div>
+          <div>Entropy Scanned: <span id="entropyCount">0</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function calculateEntropy(str) {
+      if (!str || str.length === 0) return 0;
+      const freqs = {};
+      for (const ch of str) freqs[ch] = (freqs[ch] || 0) + 1;
+      let entropy = 0;
+      for (const count of Object.values(freqs)) {
+        const p = count / str.length;
+        entropy -= p * Math.log2(p);
+      }
+      return entropy;
+    }
+
+    function runScrub() {
+      let text = document.getElementById('rawInput').value;
+      let count = 0;
+      let entropyHits = 0;
+
+      // Regex passes
+      text = text.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g, () => { count++; return '[REDACTED_EMAIL]'; });
+      text = text.replace(/\b\d{3}-\d{2}-\d{4}\b/g, () => { count++; return '[REDACTED_SSN]'; });
+      text = text.replace(/(?:\+\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g, () => { count++; return '[REDACTED_PHONE]'; });
+      text = text.replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, () => { count++; return '[REDACTED_IP]'; });
+      text = text.replace(/\bAKIA[0-9A-Z]{16}\b/g, () => { count++; return '[REDACTED_AWS_KEY]'; });
+
+      // Entropy pass
+      const words = text.split(/(\s+|["'=,:;()\[\]{}]+)/);
+      for (let i = 0; i < words.length; i++) {
+        const tok = words[i];
+        if (tok && tok.length >= 16 && !tok.startsWith('[REDACTED_')) {
+          if (calculateEntropy(tok) >= 3.8) {
+            words[i] = '[REDACTED_HIGH_ENTROPY_SECRET]';
+            count++;
+            entropyHits++;
+          }
+        }
+      }
+
+      document.getElementById('cleanOutput').textContent = words.join('');
+      document.getElementById('redactCount').textContent = count;
+      document.getElementById('entropyCount').textContent = entropyHits;
+    }
+  </script>
+</body>
+</html>
