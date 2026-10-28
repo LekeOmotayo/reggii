@@ -3,132 +3,156 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Leke Regex & Entropy PII Scrubber — Documentation & Workbench</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #0b0f19;
-      --card: rgba(17, 24, 39, 0.7);
-      --border: rgba(55, 65, 81, 0.5);
-      --accent: #a855f7;
-      --accent-glow: rgba(168, 85, 247, 0.25);
-      --success: #34d399;
-      --text: #f3f4f6;
-      --muted: #9ca3af;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background: radial-gradient(circle at 10% 20%, #1a103c 0%, #0b0f19 70%);
-      color: var(--text); min-height: 100vh; padding: 2.5rem 1rem;
-      display: flex; flex-direction: column; align-items: center;
-    }
-    .container { max-width: 960px; width: 100%; }
-    .badge {
-      display: inline-block; background: rgba(168, 85, 247, 0.15);
-      border: 1px solid rgba(168, 85, 247, 0.35);
-      color: var(--accent); padding: 0.35rem 0.85rem; border-radius: 9999px;
-      font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 1rem;
-    }
-    h1 { font-size: 2.25rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
-    p.sub { color: var(--muted); font-size: 1.05rem; margin-bottom: 2rem; line-height: 1.6; }
-    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
-    @media(max-width: 768px) { .split { grid-template-columns: 1fr; } }
-    .box {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 12px; padding: 1.5rem; backdrop-filter: blur(10px);
-    }
-    textarea {
-      width: 100%; height: 160px; background: #070a13; border: 1px solid #1f2937;
-      border-radius: 8px; color: #fff; padding: 0.75rem; font-family: 'JetBrains Mono', monospace;
-      font-size: 0.9rem; margin: 0.5rem 0 1rem;
-    }
-    button {
-      background: linear-gradient(135deg, #9333ea, #c084fc);
-      color: #fff; font-weight: 600; padding: 0.75rem 1.5rem;
-      border: none; border-radius: 8px; cursor: pointer; width: 100%;
-    }
-    .output-box {
-      background: #070a13; border: 1px solid #1f2937; border-radius: 8px;
-      padding: 0.75rem; min-height: 160px; font-family: 'JetBrains Mono', monospace;
-      font-size: 0.9rem; color: #34d399; margin: 0.5rem 0 1rem; white-space: pre-wrap; word-break: break-all;
-    }
-    .stats { display: flex; gap: 1rem; margin-top: 1rem; font-size: 0.85rem; color: var(--muted); }
-    .stats span { color: var(--accent); font-weight: 600; }
-  </style>
+  <title>Leke PII & Shannon Entropy Scrubber — LLM Data Sanitization Gateway</title>
+  <meta name="description" content="Zero-dependency regex and Shannon entropy PII scrubbing middleware with reversible pseudonymization.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
-  <div class="container">
-    <div class="badge">LLM Data Leakage Prevention</div>
-    <h1>Zero-Dependency PII & Entropy Scrubber</h1>
-    <p class="sub">High-throughput Node.js string sanitation engine combining regex classifiers with Shannon entropy scanning to redact secrets and private credentials in-browser.</p>
 
-    <div class="split">
-      <div class="box">
-        <h3>Raw Untrusted Prompt Input</h3>
-        <textarea id="rawInput">Customer profile:
-Email: robert.langdon@harvard.edu
-Phone: +1 (415) 555-2671
-SSN: 342-88-1294
-Internal Server: 10.0.4.15
-AWS Key: AKIAIOSFODNN7EXAMPLE
-High Entropy Secret: kX9#vL2!mP9$qR8@zW4^</textarea>
-        <button onclick="runScrub()">Run Scrubbing Engine</button>
-      </div>
-
-      <div class="box">
-        <h3>Sanitized LLM-Safe Payload</h3>
-        <div id="cleanOutput" class="output-box">// Click 'Run Scrubbing Engine' to sanitize...</div>
-        <div class="stats">
-          <div>Redacted Count: <span id="redactCount">0</span></div>
-          <div>Entropy Scanned: <span id="entropyCount">0</span></div>
+  <!-- Top Navigation Bar Component -->
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon">🛡️</div>
+        <div>
+          <div class="brand-title">Leke <span>PII & Entropy Scrubber</span></div>
         </div>
       </div>
+      <div class="status-badge" id="serverBadge">
+        <div class="status-dot"></div>
+        <span id="serverBadgeText">Detecting Backend Engine...</span>
+      </div>
     </div>
-  </div>
+  </header>
 
-  <script>
-    function calculateEntropy(str) {
-      if (!str || str.length === 0) return 0;
-      const freqs = {};
-      for (const ch of str) freqs[ch] = (freqs[ch] || 0) + 1;
-      let entropy = 0;
-      for (const count of Object.values(freqs)) {
-        const p = count / str.length;
-        entropy -= p * Math.log2(p);
-      }
-      return entropy;
-    }
+  <!-- Main Workspace -->
+  <main>
+    <!-- Hero Banner Component -->
+    <section class="hero-banner">
+      <div class="hero-text">
+        <h1>Zero-Dependency PII & Shannon Entropy Sanitization Gateway</h1>
+        <p>Pre-screens LLM prompts for emails, SSNs, credit cards (Luhn-validated), phones, IPs, cloud secrets, and high-entropy random keys. Supports complete redaction, partial masking, and reversible pseudonymization.</p>
+      </div>
+    </section>
 
-    function runScrub() {
-      let text = document.getElementById('rawInput').value;
-      let count = 0;
-      let entropyHits = 0;
+    <!-- Metrics Strip Component -->
+    <section class="metrics-strip">
+      <div class="metric-card purple">
+        <div class="metric-label">Elements Redacted</div>
+        <div class="metric-val" id="metricRedactedCount">0 <span class="metric-sub">detected</span></div>
+      </div>
+      <div class="metric-card emerald">
+        <div class="metric-label">Sanitization Latency</div>
+        <div class="metric-val" id="metricElapsedMs">0.0 ms <span class="metric-sub">Node.js hrtime</span></div>
+      </div>
+      <div class="metric-card amber">
+        <div class="metric-label">Entropy Cutoff</div>
+        <div class="metric-val">3.80 <span class="metric-sub">bits / character</span></div>
+      </div>
+    </section>
 
-      // Regex passes
-      text = text.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g, () => { count++; return '[REDACTED_EMAIL]'; });
-      text = text.replace(/\b\d{3}-\d{2}-\d{4}\b/g, () => { count++; return '[REDACTED_SSN]'; });
-      text = text.replace(/(?:\+\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g, () => { count++; return '[REDACTED_PHONE]'; });
-      text = text.replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, () => { count++; return '[REDACTED_IP]'; });
-      text = text.replace(/\bAKIA[0-9A-Z]{16}\b/g, () => { count++; return '[REDACTED_AWS_KEY]'; });
+    <!-- Workspace Grid -->
+    <div class="workspace-grid">
+      <!-- Left Panel: Raw Prompt Input Component -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>📝</span> Raw Untrusted Prompt Input
+          </div>
+        </div>
 
-      // Entropy pass
-      const words = text.split(/(\s+|["'=,:;()\[\]{}]+)/);
-      for (let i = 0; i < words.length; i++) {
-        const tok = words[i];
-        if (tok && tok.length >= 16 && !tok.startsWith('[REDACTED_')) {
-          if (calculateEntropy(tok) >= 3.8) {
-            words[i] = '[REDACTED_HIGH_ENTROPY_SECRET]';
-            count++;
-            entropyHits++;
-          }
-        }
-      }
+        <div style="padding: 1.25rem;">
+          <textarea id="rawInput" spellcheck="false" placeholder="Type or paste payload containing sensitive PII...">System Deployment & Customer Support Incident #9481:
+- Primary Customer Contact: alex.smith@acme-corp.com
+- Customer SSN on File: 342-88-1294
+- Escalation Phone: +1 (415) 555-2671
+- Billing Credit Card: 4532-0150-1234-5671 (Visa Gold)
+- Production Database Server: 10.0.4.15
+- AWS Root Access Key: AKIAIOSFODNN7EXAMPLE
+- OpenAI Production Token: sk-proj-94810294819238491028349199283
+- GitHub Deployment Token: ghp_1234567890abcdefghijklmnopqrstuvwxyzAB
+- Raw In-Memory Vault Secret: kX9#vL2!mP9$qR8@zW4^</textarea>
 
-      document.getElementById('cleanOutput').textContent = words.join('');
-      document.getElementById('redactCount').textContent = count;
-      document.getElementById('entropyCount').textContent = entropyHits;
-    }
-  </script>
+          <div style="margin-top: 0.75rem;">
+            <label style="font-size: 0.78rem; color: var(--text-dim); font-weight: 600;">Preset Test Scenarios:</label>
+            <div class="preset-strip" id="presetContainer">
+              <!-- Dynamically populated by InputPanel.js -->
+            </div>
+          </div>
+
+          <!-- Mode Selector Component -->
+          <div>
+            <label style="font-size: 0.78rem; color: var(--text-dim); font-weight: 600;">Sanitization Strategy:</label>
+            <div class="mode-pills">
+              <button class="mode-pill active" data-mode="mask">Complete Redaction [MASK]</button>
+              <button class="mode-pill" data-mode="partial">Partial Mask (****1234)</button>
+              <button class="mode-pill" data-mode="tokenize">Reversible {{TOKEN}}</button>
+            </div>
+          </div>
+
+          <button class="action-btn" id="scrubBtn">
+            <span>🛡️</span> Sanitize Payload with PiiScrubber
+          </button>
+        </div>
+      </section>
+
+      <!-- Right Panel: Sanitized Output Component -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>✨</span> Sanitized LLM-Safe Output
+          </div>
+          <button class="preset-btn" id="copyCleanBtn">📋 Copy Clean Text</button>
+        </div>
+
+        <div style="padding: 1.25rem;">
+          <div id="cleanOutput" class="clean-output-box">// Click 'Sanitize Payload' to evaluate...</div>
+
+          <div style="margin-top: 1rem;">
+            <label style="font-size: 0.78rem; color: var(--text-dim); font-weight: 600;">Categorized Findings:</label>
+            <div class="findings-chips" id="findingsContainer">
+              <!-- Dynamically populated by OutputPanel.js -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Bottom Panel: Reversible Pseudonymization & De-identification Vault -->
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>🔄</span> Reversible Pseudonymization & Client Re-hydration Simulator
+        </div>
+      </div>
+
+      <div style="padding: 1.25rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div>
+          <label style="font-size: 0.82rem; color: var(--text-dim); font-weight: 600; display: block; margin-bottom: 0.35rem;">Client-Side Secret Vault (Never sent to LLM):</label>
+          <pre id="vaultDisplay" style="background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; color: #a855f7; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; max-height: 180px; overflow-y: auto;">{}</pre>
+        </div>
+
+        <div>
+          <label style="font-size: 0.82rem; color: var(--text-dim); font-weight: 600; display: block; margin-bottom: 0.35rem;">Simulated LLM Output (With Synthetic Tokens):</label>
+          <textarea id="tokenizedInput" style="height: 100px; width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: #fff; padding: 0.75rem; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; margin-bottom: 0.5rem;"></textarea>
+          <button class="action-btn" id="rehydrateBtn" style="padding: 0.5rem 1rem;">
+            <span>🔄</span> Re-hydrate Original Secrets on Client
+          </button>
+          <div id="rehydratedOutput" style="margin-top: 0.75rem; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #34d399; background: var(--bg-input); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border); min-height: 50px;"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer Component -->
+  <footer>
+    Part of <strong>Leke Omotayo</strong> AI & Developer Tooling Portfolio • Zero-Dependency Regex & Shannon Entropy PII Scrubber.
+  </footer>
+
+  <!-- Modular Component Bootstrapper -->
+  <script type="module" src="/static/js/app.js"></script>
 </body>
 </html>
