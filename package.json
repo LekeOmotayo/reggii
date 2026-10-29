@@ -2,14 +2,18 @@
   "name": "leke-regex-pii-scrubber",
   "version": "1.0.0",
   "description": "Zero-dependency regex and shannon-entropy PII scrubbing middleware",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "backend/core/scrubber.js",
   "scripts": {
-    "build": "tsc",
-    "test": "node test.js",
+    "start": "node backend/server.js",
+    "test": "node backend/tests/test.js",
     "demo": "node demo.js"
   },
-  "keywords": ["pii", "scrubber", "security", "llm-guardrail"],
+  "keywords": [
+    "pii",
+    "scrubber",
+    "security",
+    "llm-guardrail"
+  ],
   "author": "Leke Omotayo",
   "license": "MIT"
 }

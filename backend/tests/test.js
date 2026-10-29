@@ -7,7 +7,7 @@
 'use strict';
 
 const assert = require('assert');
-const { PiiScrubber, isValidLuhn, calculateShannonEntropy } = require('./scrubber');
+const { PiiScrubber, isValidLuhn, calculateShannonEntropy } = require('../core/scrubber');
 
 console.log("============================================================");
 console.log("🧪 Running Leke PiiScrubber Comprehensive Test Suite");
@@ -115,3 +115,4 @@ console.log("============================================================\n");
 console.log("\n============================================================");
 console.log("🎉 All 7 PiiScrubber test suites passed successfully!");
 console.log("============================================================\n");
+

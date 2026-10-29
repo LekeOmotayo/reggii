@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enterprise PII & Secret Redaction Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+      </div>
+      <div>
+        <h1 class="brand-title">PII & SECRET SCRUBBER</h1>
+        <p class="brand-subtitle">High-Throughput Regex, Luhn Mod-10 & Shannon Entropy Sanitizer</p>
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <div class="mode-selector">
+        <label for="mode-select">Mode:</label>
+        <select id="mode-select" class="header-select">
+          <option value="REPLACE">Full Redaction [MASK]</option>
+          <option value="PARTIAL">Partial Mask (4532-****-5671)</option>
+          <option value="PSEUDONYMIZE">Reversible Pseudonym</option>
+        </select>
+      </div>
+      <div class="port-tag">PORT 8099</div>
+      <button id="rehydrate-btn" class="btn btn-outline" style="display: none;">Rehydrate Original</button>
+    </div>
+  </header>
+
+  <main class="workspace-layout">
+    <!-- Top Diff View -->
+    <section class="diff-container">
+      <!-- Left: Raw Input -->
+      <div class="editor-column">
+        <div class="column-header">
+          <span class="column-title">Raw Unsanitized Payload</span>
+          <div class="sample-pills">
+            <span class="sample-label">Load:</span>
+            <button class="sample-pill" data-key="customer_record">Customer Record</button>
+            <button class="sample-pill" data-key="devops_log">DevOps Secrets</button>
+            <button class="sample-pill" data-key="mixed_entropy">High Entropy</button>
+          </div>
+        </div>
+        <textarea id="raw-input" class="text-editor" spellcheck="false" placeholder="Paste sensitive customer logs, API keys, or database dumps here..."></textarea>
+        <div class="column-footer">
+          <button id="scrub-btn" class="btn btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            Sanitize Payload
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: Sanitized Output -->
+      <div class="editor-column">
+        <div class="column-header">
+          <span class="column-title">Sanitized De-identified Output</span>
+          <div class="stats-badge">
+            <span id="redaction-count">0 items masked</span>
+            <span class="divider">•</span>
+            <span id="processing-time">0.0 ms</span>
+          </div>
+        </div>
+        <div id="sanitized-output" class="text-editor output-viewer">
+          Click 'Sanitize Payload' to view the redacted stream.
+        </div>
+        <div class="column-footer">
+          <button id="copy-btn" class="btn btn-outline">Copy Sanitized Text</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lower: Audit & Shannon Entropy Table -->
+    <section class="audit-section">
+      <div class="section-header">
+        <h2>Redaction Audit Trail & Entropy Telemetry</h2>
+        <span class="section-sub">Luhn Checksum & Shannon Randomness Scores</span>
+      </div>
+      <div class="table-container">
+        <table class="audit-table">
+          <thead>
+            <tr>
+              <th>Entity Type</th>
+              <th>Original Token / Fragment</th>
+              <th>Sanitized Mask</th>
+              <th>Shannon Entropy</th>
+              <th>Validation Engine</th>
+            </tr>
+          </thead>
+          <tbody id="audit-tbody">
+            <tr>
+              <td colspan="5" class="empty-cell">No sensitive entities redacted yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
